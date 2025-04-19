@@ -2,6 +2,8 @@
 
 Novel Agent は、AI エージェントとの対話を通じて小説執筆を支援するために設計された Web アプリケーションです。
 
+![image](https://github.com/user-attachments/assets/d63e84e8-0269-4028-8ac4-06653b4022bb)
+
 ![image](https://github.com/user-attachments/assets/ac1e9576-5281-4c74-8e42-aa861df0a465)
 
 ## ✨ 機能
