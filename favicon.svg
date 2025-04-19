@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 64 64"
+  width="64"
+  height="64"
+>
+  <!-- 背景円：創作を連想させるやや落ち着いた紫 -->
+  <circle cx="32" cy="32" r="32" fill="#5B4DED"/>
+  
+  <!-- ペン先本体 -->
+  <path
+    d="M32 14 L24 30 L28 50 L36 50 L40 30 Z"
+    fill="#FFFFFF"
+  />
+  
+  <!-- ペン先中央の呼び孔（インク穴） -->
+  <circle
+    cx="32"
+    cy="38"
+    r="3"
+    fill="#5B4DED"
+  />
+</svg>
