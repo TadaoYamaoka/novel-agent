@@ -18,6 +18,20 @@ Novel Agent は、AI エージェントとの対話を通じて小説執筆を�
 
 ## 🏁 はじめに
 
+### すぐに試す
+
+以下の URL からすぐにアプリケーションを試すことができます。
+
+https://tadaoyamaoka.github.io/novel-agent/
+
+**注意:** このデモ版で Ollama を利用する場合は、Ollama を起動する際に環境変数 `OLLAMA_ORIGINS` を設定する必要があります。これは、Web ブラウザから Ollama へのアクセスを許可するためです (CORS 設定)。
+
+例:
+
+```
+OLLAMA_ORIGINS=*
+```
+
 ### 前提条件
 
 - Node.js (Vite/React が推奨するバージョン)
