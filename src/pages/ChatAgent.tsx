@@ -19,7 +19,7 @@ import {
   Textarea,
   Title,
 } from "@mantine/core";
-import { z } from "zod"; // Import zod
+import { z } from "zod";
 import { ChapterEditor } from "../components/ChapterEditor";
 import { CharacterEditor } from "../components/CharacterEditor";
 import { SettingsEditor } from "../components/SettingsEditor";
@@ -32,34 +32,69 @@ import {
  * Domain‑level types
  * ________________________________________________ */
 
+export type Scene = {
+  id: number;
+  content: string;
+  settingNotes?: string;
+  timeElapsed?: string;
+  keyEvents?: string[];
+  characterNotes?: string;
+  foreshadowing?: string;
+  payoff?: string;
+};
+
+export type Chapter = {
+  id: number;
+  title: string;
+  summary?: string;
+  goal?: string;
+  scenes: Scene[];
+};
+
 export type Character = {
-  number: number;
+  id: number;
   role: string;
   name: string;
-  age: number | string;
-  sex: string;
-  appearance: string;
-  personality: string;
-  ability: string;
+  aliases?: string;
+  age?: number | string;
+  sex?: string;
+  appearance?: string;
+  personality?: string;
+  abilities?: string;
+  backstory?: string;
+  motivation?: string;
+  goal?: string;
+  relationships?: string;
+  flaws?: string;
+  strengths?: string;
+  belonging?: string;
 };
 
 export type Settings = {
   theme: string;
   genre: string;
-  era: string;
-  stage: string;
-  rules: string;
-};
-
-export type Scene = {
-  number: number;
-  content: string;
-};
-
-export type Chapter = {
-  number: number;
-  title: string;
-  scenes: Scene[];
+  era?: string;
+  stage?: string;
+  logline?: string;
+  concept?: string;
+  worldBuilding?: {
+    governance?: string;
+    socialStructure?: string;
+    economy?: string;
+    technologyLevel?: string;
+    magicSystem?: string;
+    keyLocations?: { name: string; description: string }[];
+    keyGroups?: { name: string; description: string }[];
+    history?: string;
+    rules?: string;
+  };
+  writingStyle?: {
+    pov?: string;
+    tense?: string;
+    tone?: string;
+    targetAudience?: string;
+    contentAdvisory?: string;
+  };
 };
 
 export type Novel = {
@@ -94,10 +129,20 @@ type Operation =
       value: string;
     }
   | {
+      type: "update_world_building_field";
+      field: keyof NonNullable<Settings["worldBuilding"]>;
+      value: string;
+    }
+  | {
+      type: "update_writing_style_field";
+      field: keyof NonNullable<Settings["writingStyle"]>;
+      value: string;
+    }
+  | {
       type: "update_character_field";
       index: number;
       field: keyof Character;
-      value: string | number; // Allow number here
+      value: string | number;
     }
   | {
       type: "add_character";
@@ -118,6 +163,19 @@ type Operation =
       sceneIndex: number;
       field: keyof Scene;
       value: string;
+    }
+  | {
+      type: "update_chapter_field";
+      chapterIndex: number;
+      field: keyof Chapter;
+      value: string;
+    }
+  | {
+      type: "update_scene_field";
+      chapterIndex: number;
+      sceneIndex: number;
+      field: keyof Scene;
+      value: string | string[];
     };
 
 /** ________________________________________________
@@ -129,13 +187,59 @@ function applyOperations(prev: Novel, ops: Operation[]): Novel {
   ops.forEach((op) => {
     switch (op.type) {
       case "update_setting":
-        novel.settings[op.field] = op.value;
+        // Ensure field exists on settings before assignment
+        if (op.field in novel.settings) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (novel.settings as any)[op.field] = op.value;
+        }
         break;
+      case "update_world_building_field": {
+        if (!novel.settings.worldBuilding) {
+          novel.settings.worldBuilding = {};
+        }
+        // Handle array fields specifically
+        if (
+          (op.field === "keyLocations" || op.field === "keyGroups") &&
+          typeof op.value === "string"
+        ) {
+          const items = op.value
+            .split("\n")
+            .map((line) => line.trim())
+            .filter((line) => line.includes(":"))
+            .map((line) => {
+              const parts = line.split(":");
+              const name = parts[0].trim();
+              const description = parts.slice(1).join(":").trim();
+              return { name, description };
+            });
+          novel.settings.worldBuilding[op.field] = items;
+        } else {
+          // Handle simple string fields
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (novel.settings.worldBuilding as any)[op.field] = op.value;
+        }
+        break;
+      }
+      case "update_writing_style_field": {
+        if (!novel.settings.writingStyle) {
+          novel.settings.writingStyle = {}; // Initialize if it doesn't exist
+        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (novel.settings.writingStyle as any)[op.field] = op.value;
+        break;
+      }
       case "update_character_field": {
         const c = novel.characters[op.index];
         if (c) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (c as any)[op.field] = op.value;
+          // Attempt conversion if field is 'age' and value is a number string
+          if (op.field === "age") {
+            const num = Number(op.value);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (c as any)[op.field] = isNaN(num) ? op.value : num;
+          } else {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (c as any)[op.field] = op.value;
+          }
         }
         break;
       }
@@ -155,6 +259,25 @@ function applyOperations(prev: Novel, ops: Operation[]): Novel {
         if (scene) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (scene as any)[op.field] = op.value;
+        }
+        break;
+      }
+      case "update_chapter_field": {
+        const chap = novel.chapters[op.chapterIndex];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if (chap) (chap as any)[op.field] = op.value;
+        break;
+      }
+      case "update_scene_field": {
+        const scene = novel.chapters[op.chapterIndex]?.scenes[op.sceneIndex];
+        if (scene) {
+          // Handle keyEvents specifically: split string into array
+          if (op.field === "keyEvents" && typeof op.value === "string") {
+            scene.keyEvents = op.value.split("\n").filter((s) => s.trim());
+          } else {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (scene as any)[op.field] = op.value;
+          }
         }
         break;
       }
@@ -181,14 +304,48 @@ function extractJson(raw: string): string | null {
  * Zod schema for AgentResponse
  * ________________________________________________ */
 
-// Update settingsFields enum to match the refined Settings type
 const settingsFields = z
-  .enum(["theme", "genre", "era", "stage", "rules"])
+  .enum(["theme", "genre", "era", "stage", "logline", "concept"])
   .describe("Updatable setting fields");
+
 const characterFields = z
-  .enum(["role", "name", "age", "sex", "appearance", "personality", "ability"])
+  .enum([
+    "role",
+    "name",
+    "aliases",
+    "age",
+    "sex",
+    "appearance",
+    "personality",
+    "abilities",
+    "backstory",
+    "motivation",
+    "goal",
+    "relationships",
+    "flaws",
+    "strengths",
+    "belonging",
+  ])
   .describe("Updatable character attributes");
 const sceneFields = z.enum(["content"]).describe("Updatable scene attributes");
+
+const worldBuildingFields = z
+  .enum([
+    "governance",
+    "socialStructure",
+    "economy",
+    "technologyLevel",
+    "magicSystem",
+    "keyLocations", // Note: Handling complex types like arrays/objects might need more logic
+    "keyGroups", // Note: Handling complex types like arrays/objects might need more logic
+    "history",
+    "rules",
+  ])
+  .describe("Updatable world building fields");
+
+const writingStyleFields = z
+  .enum(["pov", "tense", "tone", "targetAudience", "contentAdvisory"])
+  .describe("Updatable writing style fields");
 
 const updateSettingOpSchema = z
   .object({
@@ -199,6 +356,30 @@ const updateSettingOpSchema = z
     value: z.string().describe("New value for the setting field"),
   })
   .describe("Operation to update a novel setting field");
+
+const updateWorldBuildingFieldOpSchema = z
+  .object({
+    type: z
+      .literal("update_world_building_field")
+      .describe("Operation type: Update world building attribute"),
+    field: worldBuildingFields.describe(
+      "Name of the world building attribute to update"
+    ),
+    value: z.string().describe("New value for the world building attribute"),
+  })
+  .describe("Operation to update a specific attribute of the world building");
+
+const updateWritingStyleFieldOpSchema = z
+  .object({
+    type: z
+      .literal("update_writing_style_field")
+      .describe("Operation type: Update writing style attribute"),
+    field: writingStyleFields.describe(
+      "Name of the writing style attribute to update"
+    ),
+    value: z.string().describe("New value for the writing style attribute"),
+  })
+  .describe("Operation to update a specific attribute of the writing style");
 
 const updateCharacterFieldOpSchema = z
   .object({
@@ -212,9 +393,7 @@ const updateCharacterFieldOpSchema = z
     field: characterFields.describe(
       "Name of the character attribute to update"
     ),
-    value: z
-      .union([z.string(), z.number()])
-      .describe("New value for the character attribute (age can be number)"),
+    value: z.string().describe("New value for the character attribute"),
   })
   .describe(
     "Operation to update a specific attribute of an existing character"
@@ -222,24 +401,61 @@ const updateCharacterFieldOpSchema = z
 
 const characterSchema = z
   .object({
-    number: z.number().int().describe("Character number (starting from 1)"),
+    id: z.number().int().describe("Unique identifier for the character"),
     role: z
       .string()
-      .describe("Role of the character (e.g., protagonist, heroine)"),
-    name: z.string().describe("Name of the character"),
+      .describe(
+        "Role of the character in the story (e.g., 主人公, ヒロイン, 敵役)"
+      ),
+    name: z.string().describe("Full name of the character"),
+    aliases: z
+      .string()
+      .optional()
+      .describe("Nicknames, titles, or other names the character goes by"),
     age: z
-      .union([z.number(), z.string()])
-      .describe("Age of the character (number or string)"),
-    sex: z.string().describe("Sex of the character"),
+      .string()
+      .describe(
+        "Age of the character (can be a number or descriptive string like '青年期')"
+      ),
+    sex: z.string().optional().describe("Gender or sex of the character"),
     appearance: z
       .string()
-      .describe("Description of the character's appearance"),
+      .optional()
+      .describe("Physical appearance description"),
     personality: z
       .string()
-      .describe("Description of the character's personality"),
-    ability: z.string().describe("Character's abilities or special skills"),
+      .optional()
+      .describe("Personality traits and temperament"),
+    abilities: z
+      .string()
+      .optional()
+      .describe("Special skills, powers, or abilities"),
+    backstory: z
+      .string()
+      .optional()
+      .describe("Background history of the character"),
+    motivation: z
+      .string()
+      .optional()
+      .describe("What drives the character's actions"),
+    goal: z
+      .string()
+      .optional()
+      .describe("The character's primary objective or desire"),
+    relationships: z
+      .string()
+      .optional()
+      .describe(
+        "Description of relationships with other characters (free text)"
+      ),
+    flaws: z.string().optional().describe("Weaknesses or negative traits"),
+    strengths: z.string().optional().describe("Strengths or positive traits"),
+    belonging: z
+      .string()
+      .optional()
+      .describe("Group, organization, or place the character belongs to"),
   })
-  .describe("Definition of a character appearing in the novel");
+  .describe("Detailed information of the character");
 
 const addCharacterOpSchema = z
   .object({
@@ -250,25 +466,24 @@ const addCharacterOpSchema = z
   })
   .describe("Operation to add a new character to the novel");
 
-const sceneSchema = z
-  .object({
-    number: z
-      .number()
-      .int()
-      .describe("Scene number (starting from 1 within the chapter)"),
-    content: z.string().describe("Content/body of the scene"),
-  })
-  .describe("Definition of an individual scene composing a chapter");
+const sceneSchema = z.object({
+  id: z.number().int(),
+  content: z.string(),
+  settingNotes: z.string(),
+  timeElapsed: z.string(),
+  keyEvents: z.array(z.string()),
+  characterNotes: z.string(),
+  foreshadowing: z.string(),
+  payoff: z.string(),
+});
 
-const chapterSchema = z
-  .object({
-    number: z.number().int().describe("Chapter number (starting from 1)"),
-    title: z.string().describe("Title of the chapter"),
-    scenes: z
-      .array(sceneSchema)
-      .describe("List of scenes included in the chapter"),
-  })
-  .describe("Definition of a novel chapter");
+const chapterSchema = z.object({
+  id: z.number().int(),
+  title: z.string(),
+  summary: z.string(),
+  goal: z.string(),
+  scenes: z.array(sceneSchema),
+});
 
 const addChapterOpSchema = z
   .object({
@@ -310,14 +525,45 @@ const updateSceneContentOpSchema = z
   })
   .describe("Operation to update the content of an existing scene");
 
+const updateChapterFieldOpSchema = z.object({
+  type: z.literal("update_chapter_field"),
+  chapterIndex: z.number().int(),
+  field: z.enum(["id", "title", "summary", "goal"]),
+  value: z.string(),
+});
+
+const updateSceneFieldOpSchema = z.object({
+  type: z.literal("update_scene_field"),
+  chapterIndex: z.number().int(),
+  sceneIndex: z.number().int(),
+  field: z.enum([
+    "id",
+    "content",
+    "settingNotes",
+    "timeElapsed",
+    "keyEvents",
+    "characterNotes",
+    "foreshadowing",
+    "payoff",
+  ]),
+  value: z.string(),
+});
+
+// Revert to union to avoid invalid "not" constraints in JSON Schema
+// Change z.union to z.discriminatedUnion
 const operationSchema = z
-  .union([
+  .discriminatedUnion("type", [
+    // Use discriminatedUnion based on the 'type' field
     updateSettingOpSchema,
+    updateWorldBuildingFieldOpSchema,
+    updateWritingStyleFieldOpSchema,
     updateCharacterFieldOpSchema,
     addCharacterOpSchema,
     addChapterOpSchema,
     addSceneOpSchema,
     updateSceneContentOpSchema,
+    updateChapterFieldOpSchema,
+    updateSceneFieldOpSchema,
   ])
   .describe("One of the possible operation objects to modify the novel state");
 
@@ -361,30 +607,31 @@ export const ChatAgent: FC = () => {
       genre: "SF・ディストピア・サスペンス",
       era: "近未来（西暦2093年）",
       stage: "メガシティ・ネオトウキョウ",
-      rules:
-        "市民は全てAIによって監視・管理され、自由意志を持つことが許されない。人間の意思決定は『ガイダンスAI』によって最適化される。",
-      // agentPersona and agentGoal removed from here
+      worldBuilding: {
+        rules:
+          "市民は全てAIによって監視・管理され、自由意志を持つことが許されない。人間の意思決定は『ガイダンスAI』によって最適化される。",
+      },
     },
     characters: [
       {
-        number: 1,
+        id: 1,
         role: "主人公",
         name: "天城 レン",
         age: 24,
         sex: "男",
         appearance: "黒髪の短髪、鋭い目つき、細身の体型",
         personality: "冷静沈着だが、内心は自由を求める強い意志を持つ",
-        ability: "高度なハッキングスキルと電子機器の扱いに長けている",
+        abilities: "高度なハッキングスキルと電子機器の扱いに長けている",
       },
       {
-        number: 2,
+        id: 2,
         role: "ヒロイン",
         name: "ユナ・アンドロイド No.107",
         age: 20,
         sex: "女",
         appearance: "銀髪に琥珀色の瞳、アンドロイドらしからぬ表情豊かな顔",
         personality: "好奇心旺盛で、感情を持つことに興味を抱いている",
-        ability: "高度な分析能力と戦闘スキルを搭載",
+        abilities: "高度な分析能力と戦闘スキルを搭載",
       },
     ],
     chapters: [],
@@ -465,6 +712,57 @@ export const ChatAgent: FC = () => {
       setNovel((prev) => ({
         ...prev,
         settings: { ...prev.settings, [field]: value },
+      }));
+    },
+    []
+  );
+
+  const handleWorldBuildingChange = useCallback(
+    (field: keyof NonNullable<Settings["worldBuilding"]>, value: string) => {
+      setNovel((prev) => {
+        let updatedValue: string | { name: string; description: string }[] =
+          value;
+
+        // Parse string into array for specific fields
+        if (field === "keyLocations" || field === "keyGroups") {
+          updatedValue = value
+            .split("\n")
+            .map((line) => line.trim())
+            .filter((line) => line.includes(":"))
+            .map((line) => {
+              const parts = line.split(":");
+              const name = parts[0].trim();
+              const description = parts.slice(1).join(":").trim();
+              return { name, description };
+            });
+        }
+
+        return {
+          ...prev,
+          settings: {
+            ...prev.settings,
+            worldBuilding: {
+              ...(prev.settings.worldBuilding || {}),
+              [field]: updatedValue, // Use the potentially parsed value
+            },
+          },
+        };
+      });
+    },
+    []
+  );
+
+  const handleWritingStyleChange = useCallback(
+    (field: keyof NonNullable<Settings["writingStyle"]>, value: string) => {
+      setNovel((prev) => ({
+        ...prev, // Spread the previous novel state
+        settings: {
+          ...prev.settings, // Spread the previous settings
+          writingStyle: {
+            ...(prev.settings.writingStyle || {}), // Spread the previous writingStyle
+            [field]: value, // Apply the specific change
+          },
+        },
       }));
     },
     []
@@ -554,9 +852,9 @@ export const ChatAgent: FC = () => {
     const md = novel.chapters
       .map(
         (ch) =>
-          `# Chapter ${ch.number}: ${ch.title}\n\n` +
+          `# Chapter ${ch.id}: ${ch.title}\n\n` +
           ch.scenes
-            .map((sc) => `## Scene ${sc.number}\n\n${sc.content}`)
+            .map((sc) => `## Scene ${sc.id}\n\n${sc.content}`)
             .join("\n\n")
       )
       .join("\n\n");
@@ -654,7 +952,7 @@ export const ChatAgent: FC = () => {
     setLoading(true);
 
     // --- Dynamically construct the system prompt using systemPromptConfig state ---
-    const { persona, goal } = systemPromptConfig; // Use state here
+    const { persona, goal } = systemPromptConfig;
     const dynamicSystemPrompt = `${persona}
 
 # Goal
@@ -670,12 +968,13 @@ ${goal}
 \`\`\`
 
 # Permitted operation objects
-- update_setting: { "type": "update_setting", "field": "theme|genre|era|stage|rules", "value": "..." }
-- update_character_field: { "type": "update_character_field", "index": 0-based, "field": "role|name|age|sex|appearance|personality|ability", "value": "..." }
-- add_character: { "type": "add_character", "character": { "number": number, "role": string, "name": string, "age": number or string, "sex": string, "appearance": string, "personality": string, "ability": string } }
-- add_chapter: { "type": "add_chapter", "chapter": { "number": number, "title": string, "scenes": { "number": number, "content": string }[] }
-- add_scene: { "type": "add_scene", "chapterIndex": 0-based, "scene": { "number": number, "content": string } }
-- update_scene_content: { "type": "update_scene_content", "chapterIndex": 0-based, "sceneIndex": 0-based, "field": "content", "value": "..." }
+- update_setting: { "type": "update_setting", "field": "theme|genre|era|stage|logline|concept", "value": "..." }
+- update_world_building_field: { "type": "update_world_building_field", "field": "governance|socialStructure|economy|technologyLevel|magicSystem|keyLocations|keyGroups|history|rules", "value": "..." }
+- update_writing_style_field: { "type": "update_writing_style_field", "field": "pov|tense|tone|targetAudience|contentAdvisory", "value": "..." } // Add definition for writing style
+- update_character_field: { "type": "update_character_field", "index": 0-based, "field": "role|name|aliases|age|sex|appearance|personality|abilities|backstory|motivation|goal|relationships|flaws|strengths|belonging", "value": "..." }
+- add_character: { "type": "add_character", "character": { "id": number, "role": string, "name": string, "age": string, "sex": string, "appearance": string, "personality": string, "abilities": string, "backstory": string, "motivation": string, "goal": string, "relationships": string, "flaws": string, "strengths": string, "belonging": string } }
+- add_chapter: { "type": "add_chapter", "chapter": { "id": number, "title": string, "scenes": { "id": number, "content": string }[] }
+- add_scene: { "type": "add_scene", "chapterIndex": 0-based, "scene": { "id": number, "content": string } }
 
 # Strict rules
 - JSON 以外を絶対に出力しないこと。
@@ -708,9 +1007,11 @@ ${goal}
       let parsed: AgentResponse;
 
       if (apiProvider === "openai" && chatModel instanceof ChatOpenAI) {
-        // Use withStructuredOutput for OpenAI
-        const structuredChatModel =
-          chatModel.withStructuredOutput(agentResponseSchema);
+        // Use withStructuredOutput for OpenAI with the FULL schema
+        const structuredChatModel = chatModel.withStructuredOutput(
+          agentResponseSchema // Use the full schema here
+        );
+        // Invoke should now return the fully parsed and validated object
         parsed = await structuredChatModel.invoke(chatHistory);
       } else if (apiProvider === "ollama" && chatModel instanceof ChatOllama) {
         // Use streaming and manual parsing for Ollama
@@ -982,6 +1283,8 @@ ${goal}
           <SettingsEditor
             settings={novel.settings}
             onChange={handleSettingChange}
+            onWorldBuildingChange={handleWorldBuildingChange}
+            onWritingStyleChange={handleWritingStyleChange}
           />
           <CharacterEditor
             characters={novel.characters}

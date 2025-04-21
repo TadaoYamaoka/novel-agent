@@ -30,14 +30,34 @@ export const ChapterEditor: FC<ChapterEditorProps> = ({
       <Stack gap="lg">
         {chapters.map((chap, chapIndex) => (
           <Box
-            key={chap.number}
+            key={chap.id}
             p="md"
             bd="1px solid gray"
             style={{ borderRadius: "4px" }}
           >
             <Title order={5} mb="sm">
-              第{chap.number}章
+              第{chap.id}章
             </Title>
+            <Textarea
+              label="章概要"
+              value={chap.summary || ""}
+              onChange={(e) =>
+                onChapterChange(chapIndex, "summary", e.currentTarget.value)
+              }
+              autosize
+              minRows={2}
+              mb="xs"
+            />
+            <Textarea
+              label="章の目的"
+              value={chap.goal || ""}
+              onChange={(e) =>
+                onChapterChange(chapIndex, "goal", e.currentTarget.value)
+              }
+              autosize
+              minRows={2}
+              mb="md"
+            />
             <TextInput
               label="章タイトル"
               value={chap.title}
@@ -52,13 +72,13 @@ export const ChapterEditor: FC<ChapterEditorProps> = ({
             <Stack gap="md">
               {chap.scenes.map((scene, sceneIndex) => (
                 <Box
-                  key={scene.number}
+                  key={scene.id}
                   p="sm"
                   bd="1px solid gray"
                   style={{ borderRadius: "4px" }}
                 >
                   <Title order={6} mb="xs">
-                    シーン {scene.number}
+                    シーン {scene.id}
                   </Title>
                   <Textarea
                     value={scene.content}
@@ -72,6 +92,94 @@ export const ChapterEditor: FC<ChapterEditorProps> = ({
                     }
                     autosize
                     minRows={5}
+                    mb="xs"
+                  />
+                  <Textarea
+                    label="場所／状況メモ"
+                    value={scene.settingNotes || ""}
+                    onChange={(e) =>
+                      onSceneChange(
+                        chapIndex,
+                        sceneIndex,
+                        "settingNotes",
+                        e.currentTarget.value
+                      )
+                    }
+                    autosize
+                    minRows={1}
+                    mb="xs"
+                  />
+                  <TextInput
+                    label="経過時間"
+                    value={scene.timeElapsed || ""}
+                    onChange={(e) =>
+                      onSceneChange(
+                        chapIndex,
+                        sceneIndex,
+                        "timeElapsed",
+                        e.currentTarget.value
+                      )
+                    }
+                    mb="xs"
+                  />
+                  <Textarea
+                    label="人物メモ"
+                    value={scene.characterNotes || ""}
+                    onChange={(e) =>
+                      onSceneChange(
+                        chapIndex,
+                        sceneIndex,
+                        "characterNotes",
+                        e.currentTarget.value
+                      )
+                    }
+                    autosize
+                    minRows={1}
+                    mb="xs"
+                  />
+                  <Textarea
+                    label="伏線"
+                    value={scene.foreshadowing || ""}
+                    onChange={(e) =>
+                      onSceneChange(
+                        chapIndex,
+                        sceneIndex,
+                        "foreshadowing",
+                        e.currentTarget.value
+                      )
+                    }
+                    autosize
+                    minRows={1}
+                    mb="xs"
+                  />
+                  <Textarea
+                    label="回収"
+                    value={scene.payoff || ""}
+                    onChange={(e) =>
+                      onSceneChange(
+                        chapIndex,
+                        sceneIndex,
+                        "payoff",
+                        e.currentTarget.value
+                      )
+                    }
+                    autosize
+                    minRows={1}
+                    mb="xs"
+                  />
+                  <Textarea
+                    label="重要イベント (改行で区切り)"
+                    value={scene.keyEvents?.join("\n") || ""}
+                    onChange={(e) =>
+                      onSceneChange(
+                        chapIndex,
+                        sceneIndex,
+                        "keyEvents",
+                        e.currentTarget.value
+                      )
+                    }
+                    autosize
+                    minRows={2}
                     mb="xs"
                   />
                 </Box>
