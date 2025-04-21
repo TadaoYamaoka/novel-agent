@@ -187,11 +187,8 @@ function applyOperations(prev: Novel, ops: Operation[]): Novel {
   ops.forEach((op) => {
     switch (op.type) {
       case "update_setting":
-        // Ensure field exists on settings before assignment
-        if (op.field in novel.settings) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (novel.settings as any)[op.field] = op.value;
-        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (novel.settings as any)[op.field] = op.value;
         break;
       case "update_world_building_field": {
         if (!novel.settings.worldBuilding) {
