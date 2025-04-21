@@ -981,7 +981,8 @@ ${goal}
 - "reply" の改行は \\n でエスケープ。
 - <think></think> タグ内で自由に思考して良いが、タグの外には JSON のみを出力すること。
 - **"operations" 配列には、必ず # Permitted operation objects で定義された type のオブジェクトのみを含めること。それ以外の type を持つオブジェクトは絶対に使用しないこと。**
-- **ユーザーが「第X章」「Y番目のキャラクター」「Z番目のシーン」のように1から始まる番号で指示した場合でも、JSON内の \`index\` や \`chapterIndex\`, \`sceneIndex\` は必ず0から始まる番号に変換して出力すること。例えば、ユーザーが「第1章のシーン3」について言及した場合、\`chapterIndex\` は \`0\`、\`sceneIndex\` は \`2\` となります。**`;
+- **ユーザーが「第X章」「Y番目のキャラクター」「Z番目のシーン」のように1から始まる番号で指示した場合でも、JSON内の \`index\` や \`chapterIndex\`, \`sceneIndex\` は必ず0から始まる番号に変換して出力すること。例えば、ユーザーが「第1章のシーン3」について言及した場合、\`chapterIndex\` は \`0\`、\`sceneIndex\` は \`2\` となります。**
+- **For "keyLocations" and "keyGroups", the "value" must be a string with each item on a new line, formatted as "Name: Description". Example: "場所1: 説明1\\n場所2: 説明2"**`;
     // --- End dynamic system prompt construction ---
 
     const chatHistory = [new SystemMessage(dynamicSystemPrompt)];
