@@ -1,5 +1,13 @@
 import { FC } from "react";
-import { Textarea, TextInput, Title, Box, Stack } from "@mantine/core";
+import {
+  Textarea,
+  TextInput,
+  Title,
+  Box,
+  Stack,
+  Flex, // Import Flex
+  Button, // Import Button
+} from "@mantine/core";
 import { Chapter, Scene } from "../pages/ChatAgent";
 
 interface ChapterEditorProps {
@@ -15,18 +23,32 @@ interface ChapterEditorProps {
     field: keyof Scene,
     value: string
   ) => void;
+  handleClearChapters: () => void; // Add handler prop
+  loading: boolean; // Add loading prop
 }
 
 export const ChapterEditor: FC<ChapterEditorProps> = ({
   chapters,
   onChapterChange,
   onSceneChange,
+  handleClearChapters, // Destructure handler
+  loading, // Destructure loading state
 }) => {
   return (
     <Box>
-      <Title order={4} mb="xs">
-        本文
-      </Title>
+      {/* Wrap Title and Button in Flex */}
+      <Flex justify="space-between" align="center" mb="xs">
+        <Title order={4}>本文</Title>
+        <Button
+          variant="outline"
+          color="gray"
+          size="xs"
+          onClick={handleClearChapters}
+          disabled={loading}
+        >
+          Clear Chapters
+        </Button>
+      </Flex>
       <Stack gap="lg">
         {chapters.map((chap, chapIndex) => (
           <Box

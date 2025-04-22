@@ -1,5 +1,13 @@
 import { FC } from "react";
-import { Accordion, Textarea, TextInput, Title } from "@mantine/core";
+import {
+  Accordion,
+  Textarea,
+  TextInput,
+  Title,
+  Box, // Import Box
+  Flex, // Import Flex
+  Button, // Import Button
+} from "@mantine/core";
 import { Character } from "../pages/ChatAgent"; // Adjust import path if needed
 
 interface CharacterEditorProps {
@@ -9,17 +17,33 @@ interface CharacterEditorProps {
     field: keyof Character,
     value: string | number
   ) => void;
+  handleClearCharacters: () => void; // Add handler prop
+  loading: boolean; // Add loading prop
 }
 
 export const CharacterEditor: FC<CharacterEditorProps> = ({
   characters,
   onChange,
+  handleClearCharacters, // Destructure handler
+  loading, // Destructure loading state
 }) => {
   return (
-    <div>
-      <Title order={4} mb="xs">
-        登場人物
-      </Title>
+    <Box mb="md">
+      {" "}
+      {/* Add margin bottom */}
+      {/* Wrap Title and Button in Flex */}
+      <Flex justify="space-between" align="center" mb="xs">
+        <Title order={4}>登場人物</Title>
+        <Button
+          variant="outline"
+          color="gray"
+          size="xs"
+          onClick={handleClearCharacters}
+          disabled={loading}
+        >
+          Clear Characters
+        </Button>
+      </Flex>
       <Accordion variant="separated">
         {characters.map((char, index) => (
           <Accordion.Item key={char.id} value={`char-${char.id}`}>
@@ -171,6 +195,6 @@ export const CharacterEditor: FC<CharacterEditorProps> = ({
           </Accordion.Item>
         ))}
       </Accordion>
-    </div>
+    </Box>
   );
 };

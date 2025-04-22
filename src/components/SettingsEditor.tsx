@@ -6,6 +6,8 @@ import {
   Title,
   Textarea,
   Box,
+  Flex, // Import Flex
+  Button, // Import Button
 } from "@mantine/core"; // Added Box
 import { Settings } from "../pages/ChatAgent"; // Adjust import path if needed
 
@@ -20,6 +22,8 @@ interface SettingsEditorProps {
     field: keyof NonNullable<Settings["writingStyle"]>,
     value: string
   ) => void;
+  handleClearSettings: () => void; // Add handler prop
+  loading: boolean; // Add loading prop
 }
 
 // Helper to format array fields for Textarea
@@ -36,16 +40,27 @@ export const SettingsEditor: FC<SettingsEditorProps> = ({
   onChange,
   onWorldBuildingChange,
   onWritingStyleChange,
+  handleClearSettings, // Destructure handler
+  loading, // Destructure loading state
 }) => {
   return (
-    <Box>
+    <Box mb="md">
       {" "}
-      {/* Wrap everything in a Box or Fragment */}
+      {/* Add margin bottom */}
       {/* 基本設定 Fields (outside Accordion) */}
-      <Title order={5} mb="xs">
-        基本設定
-      </Title>{" "}
-      {/* Add Title */}
+      {/* Wrap Title and Button in Flex */}
+      <Flex justify="space-between" align="center" mb="xs">
+        <Title order={5}>基本設定</Title>
+        <Button
+          variant="outline"
+          color="gray"
+          size="xs"
+          onClick={handleClearSettings}
+          disabled={loading}
+        >
+          Clear Settings
+        </Button>
+      </Flex>
       <Stack gap="xs" mb="md">
         {" "}
         {/* Wrap fields in Stack */}
