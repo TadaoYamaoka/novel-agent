@@ -68,6 +68,7 @@ export type Character = {
   flaws?: string;
   strengths?: string;
   belonging?: string;
+  inner_conflict_arc?: string;
 };
 
 export type Settings = {
@@ -322,6 +323,7 @@ const characterFields = z
     "flaws",
     "strengths",
     "belonging",
+    "inner_conflict_arc", // Add field to enum
   ])
   .describe("Updatable character attributes");
 const sceneFields = z.enum(["content"]).describe("Updatable scene attributes");
@@ -451,6 +453,12 @@ const characterSchema = z
       .string()
       .optional()
       .describe("Group, organization, or place the character belongs to"),
+    inner_conflict_arc: z // Add field to schema
+      .string()
+      .optional()
+      .describe(
+        "Description of the character's internal changes and development throughout the story"
+      ),
   })
   .describe("Detailed information of the character");
 
@@ -968,7 +976,7 @@ ${goal}
 - update_setting: { "type": "update_setting", "field": "theme|genre|era|stage|logline|concept", "value": "..." }
 - update_world_building_field: { "type": "update_world_building_field", "field": "governance|socialStructure|economy|technologyLevel|magicSystem|keyLocations|keyGroups|history|rules", "value": "..." }
 - update_writing_style_field: { "type": "update_writing_style_field", "field": "pov|tense|tone|targetAudience|contentAdvisory", "value": "..." } // Add definition for writing style
-- update_character_field: { "type": "update_character_field", "index": 0-based, "field": "role|name|aliases|age|sex|appearance|personality|abilities|backstory|motivation|goal|relationships|flaws|strengths|belonging", "value": "..." }
+- update_character_field: { "type": "update_character_field", "index": 0-based, "field": "role|name|aliases|age|sex|appearance|personality|abilities|backstory|motivation|goal|relationships|flaws|strengths|belonging|inner_conflict_arc", "value": "..." } // Add inner_conflict_arc here
 - add_character: { "type": "add_character", "character": { "id": number, "role": string, "name": string, "age": string, "sex": string, "appearance": string, "personality": string, "abilities": string, "backstory": string, "motivation": string, "goal": string, "relationships": string, "flaws": string, "strengths": string, "belonging": string } }
 - add_chapter: { "type": "add_chapter", "chapter": { "id": number, "title": string, "scenes": { "id": number, "content": string }[] }
 - add_scene: { "type": "add_scene", "chapterIndex": 0-based, "scene": { "id": number, "content": string } }

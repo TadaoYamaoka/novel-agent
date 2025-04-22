@@ -155,6 +155,16 @@ export const CharacterEditor: FC<CharacterEditorProps> = ({
                 }
                 autosize
                 minRows={1}
+                mb="xs"
+              />
+              <Textarea
+                label="内面の変化"
+                value={char.inner_conflict_arc || ""}
+                onChange={(e) =>
+                  onChange(index, "inner_conflict_arc", e.currentTarget.value)
+                }
+                autosize
+                minRows={3}
                 mb="md"
               />
             </Accordion.Panel>
