@@ -41,6 +41,7 @@ export type Scene = {
   characterNotes?: string;
   foreshadowing?: string;
   payoff?: string;
+  symbols?: string;
 };
 
 export type Chapter = {
@@ -480,6 +481,7 @@ const sceneSchema = z.object({
   characterNotes: z.string(),
   foreshadowing: z.string(),
   payoff: z.string(),
+  symbols: z.string(),
 });
 
 const chapterSchema = z.object({
@@ -550,6 +552,7 @@ const updateSceneFieldOpSchema = z.object({
     "characterNotes",
     "foreshadowing",
     "payoff",
+    "symbols",
   ]),
   value: z.string(),
 });
@@ -1179,6 +1182,7 @@ ${goal}
 - add_character: { "type": "add_character", "character": { "id": number, "role": string, "name": string, "age": string, "sex": string, "appearance": string, "personality": string, "abilities": string, "backstory": string, "motivation": string, "goal": string, "relationships": string, "flaws": string, "strengths": string, "belonging": string } }
 - add_chapter: { "type": "add_chapter", "chapter": { "id": number, "title": string, "scenes": { "id": number, "content": string }[] }
 - add_scene: { "type": "add_scene", "chapterIndex": 0-based, "scene": { "id": number, "content": string } }
+- update_scene_field: { "type": "update_scene_field", "chapterIndex": 0-based, "sceneIndex": 0-based, "field": "content|settingNotes|timeElapsed|keyEvents|characterNotes|foreshadowing|payoff|symbols", "value": "..." } // Note: For keyEvents, value should be a newline-separated string.
 
 # Strict rules
 - JSON 以外を絶対に出力しないこと。

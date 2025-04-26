@@ -189,6 +189,21 @@ export const ChapterEditor: FC<ChapterEditorProps> = ({
                     minRows={1}
                     mb="xs"
                   />
+                  <Textarea // Add Textarea for symbols
+                    label="シンボル"
+                    value={scene.symbols || ""}
+                    onChange={(e) =>
+                      onSceneChange(
+                        chapIndex,
+                        sceneIndex,
+                        "symbols",
+                        e.currentTarget.value
+                      )
+                    }
+                    autosize
+                    minRows={1}
+                    mb="xs"
+                  />
                   <Textarea
                     label="重要イベント (改行で区切り)"
                     value={scene.keyEvents?.join("\n") || ""}
